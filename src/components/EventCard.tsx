@@ -1,13 +1,16 @@
 import React from 'react';
 import type { HistoricalEvent } from '../types';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface EventCardProps {
     event: HistoricalEvent;
+    onClick: (event: HistoricalEvent) => void;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event }) => {
+export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
+    const { t } = useLanguage();
     return (
-        <div className="event-card">
+        <div className="event-card" onClick={() => onClick(event)}>
             {event.imageUrl && (
                 <div className="event-image-wrapper">
                     <img src={event.imageUrl} alt={event.title} className="event-image" loading="lazy" />
@@ -20,7 +23,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
 
                 {event.sourceUrl && (
                     <a href={event.sourceUrl} target="_blank" rel="noopener noreferrer" className="read-more">
-                        Read on Wikipedia &rarr;
+                        {t('read.more')}
                     </a>
                 )}
             </div>
@@ -35,6 +38,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
             box-shadow: var(--shadow-md);
             border: 1px solid var(--border-color);
             transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
         }
         .event-card:hover {
             transform: translateY(-4px);

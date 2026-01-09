@@ -1,24 +1,48 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export type FocusTopic = 'All' | 'Science' | 'War' | 'Art' | 'Space' | 'Region';
 
 interface FocusSelectorProps {
-    selectedFocus: FocusTopic;
-    onFocusChange: (focus: FocusTopic) => void;
+    selectedFocus: FocusTopic[];
+    onFocusChange: (focus: FocusTopic[]) => void;
 }
 
-const TOPICS: FocusTopic[] = ['All', 'Science', 'War', 'Art', 'Space', 'Region'];
+const TOPICS: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region'];
 
 export const FocusSelector: React.FC<FocusSelectorProps> = ({ selectedFocus, onFocusChange }) => {
+    const { t } = useLanguage();
+
+    const handleTopicClick = (topic: FocusTopic) => {
+        // Toggle logic
+        let newFocus: FocusTopic[];
+        if (selectedFocus.includes(topic)) {
+            newFocus = selectedFocus.filter(f => f !== topic);
+        } else {
+            newFocus = [...selectedFocus, topic];
+        }
+        onFocusChange(newFocus);
+    };
+
+    const handleClear = () => {
+        onFocusChange([]);
+    };
+
     return (
         <div className="focus-container">
-            <span className="focus-label">Focus Area:</span>
+            <span className="focus-label">{t('focus.label')}</span>
             <div className="focus-buttons">
+                <button
+                    className={`focus-btn ${selectedFocus.length === 0 ? 'active' : ''}`}
+                    onClick={handleClear}
+                >
+                    All
+                </button>
                 {TOPICS.map(topic => (
                     <button
                         key={topic}
-                        className={`focus-btn ${selectedFocus === topic ? 'active' : ''}`}
-                        onClick={() => onFocusChange(topic)}
+                        className={`focus-btn ${selectedFocus.includes(topic) ? 'active' : ''}`}
+                        onClick={() => handleTopicClick(topic)}
                     >
                         {topic}
                     </button>
@@ -52,6 +76,7 @@ export const FocusSelector: React.FC<FocusSelectorProps> = ({ selectedFocus, onF
             color: var(--text-color);
             transition: all 0.2s;
             font-size: 0.9rem;
+            cursor: pointer;
         }
         .focus-btn:hover {
             border-color: var(--primary-color);

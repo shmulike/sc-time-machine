@@ -1,18 +1,22 @@
 import React from 'react';
 import type { HistoricalEvent } from '../types';
 import { EventCard } from './EventCard';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TimelineProps {
     events: HistoricalEvent[];
     loading: boolean;
+    onEventClick: (event: HistoricalEvent) => void;
 }
 
-export const Timeline: React.FC<TimelineProps> = ({ events, loading }) => {
+export const Timeline: React.FC<TimelineProps> = ({ events, loading, onEventClick }) => {
+    const { t } = useLanguage();
+
     if (loading) {
         return (
             <div className="timeline-loading">
                 <div className="spinner"></div>
-                <p>Traveling through time...</p>
+                <p>{t('loading.title')}</p>
                 <style>{`
                 .timeline-loading {
                     text-align: center;
@@ -39,8 +43,8 @@ export const Timeline: React.FC<TimelineProps> = ({ events, loading }) => {
     if (events.length === 0) {
         return (
             <div className="timeline-empty">
-                <p>No recorded events found for this specific time period.</p>
-                <p className="hint">Try adjusting the slider slightly!</p>
+                <p>{t('empty.title')}</p>
+                <p className="hint">{t('empty.hint')}</p>
                 <style>{`
                 .timeline-empty {
                     text-align: center;
@@ -60,7 +64,7 @@ export const Timeline: React.FC<TimelineProps> = ({ events, loading }) => {
     return (
         <div className="timeline-container">
             {events.map((event) => (
-                <EventCard key={event.id} event={event} />
+                <EventCard key={event.id} event={event} onClick={onEventClick} />
             ))}
 
             <style>{`

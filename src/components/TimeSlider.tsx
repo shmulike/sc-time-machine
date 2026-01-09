@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface TimeSliderProps {
     value: number;
@@ -8,6 +9,7 @@ interface TimeSliderProps {
 }
 
 export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, label }) => {
+    const { t } = useLanguage();
     return (
         <div className="slider-wrapper">
             <div className="slider-label">{label}</div>
@@ -20,7 +22,7 @@ export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, la
                     onChange={(e) => onChange(Number(e.target.value))}
                     className="styled-slider"
                 />
-                <div className="slider-value-display">Going back {value} steps</div>
+                <div className="slider-value-display">{t('slider.value', { value })}</div>
             </div>
 
             <style>{`

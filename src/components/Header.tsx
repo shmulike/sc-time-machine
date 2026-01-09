@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export const Header: React.FC = () => {
     const [currentDate, setCurrentDate] = useState<string>('');
+    const { t, language } = useLanguage();
 
     useEffect(() => {
-        // Format: "Thursday, January 9, 2026"
         const now = new Date();
         const options: Intl.DateTimeFormatOptions = {
             weekday: 'long',
@@ -12,13 +13,15 @@ export const Header: React.FC = () => {
             month: 'long',
             day: 'numeric'
         };
-        setCurrentDate(now.toLocaleDateString('en-US', options));
-    }, []);
+        // Use proper locale based on language
+        const locale = language === 'he' ? 'he-IL' : 'en-US';
+        setCurrentDate(now.toLocaleDateString(locale, options));
+    }, [language]);
 
     return (
         <header className="header-container">
-            <h1 className="main-title">Time Machine</h1>
-            <div className="sub-title">How Long Is ‘Long’?</div>
+            <h1 className="main-title">{t('app.title')}</h1>
+            <div className="sub-title">{t('app.subtitle')}</div>
             <div className="current-date">{currentDate}</div>
 
             <style>{`

@@ -23,23 +23,22 @@ export const getStepValue = (step: TimeStep): number => {
 
 export const getStepMax = (step: TimeStep): number => {
     switch (step) {
-        case '1 minute': return 1440; // 1 day in minutes
-        case '1 year': return 2024; // Up to year 0 (roughly)
-        case '10 years': return 500; // 5000 years
-        case '100 years': return 200; // 20,000 years
-        case '1000 years': return 1000; // 1 million years
-        case '1 million years': return 4500; // 4.5 billion years (Age of Earth)
+        case '1 minute': return 1440;
+        case '1 year': return 2024;
+        case '10 years': return 500;
+        case '100 years': return 200;
+        case '1000 years': return 1000;
+        case '1 million years': return 4500;
         default: return 100;
     }
 };
 
-// Returns a formatted string representation of the target date/year
-export const calculateTargetTime = (start: Date, step: TimeStep, value: number): string => {
-    if (value === 0) return 'Now';
+export const calculateTargetTime = (start: Date, step: TimeStep, value: number, lang: 'en' | 'he' = 'en'): string => {
+    if (value === 0) return lang === 'he' ? 'עכשיו' : 'Now';
 
     if (step === '1 minute') {
         const target = new Date(start.getTime() - value * 60 * 1000);
-        return target.toLocaleString();
+        return target.toLocaleString(lang === 'he' ? 'he-IL' : 'en-US');
     }
 
     // Large year calculations
@@ -53,13 +52,13 @@ export const calculateTargetTime = (start: Date, step: TimeStep, value: number):
     const currentYear = start.getFullYear();
     const targetYear = currentYear - yearsBack;
 
-    if (targetYear > 0) return `AD ${targetYear}`;
-    if (targetYear <= 0) return `${Math.abs(targetYear - 1)} BC`; // -1 to account for no year 0 if strictly historical, but simple calc is fine
-
-    // For millions
-    if (step === '1 million years') {
-        return `${value} Million Years Ago`;
+    if (lang === 'he') {
+        if (step === '1 million years') return `לפני ${value} מיליון שנה`;
+        if (targetYear > 0) return `${targetYear} לספירה`;
+        return `${Math.abs(targetYear - 1)} לפני הספירה`;
     }
 
-    return `${Math.abs(targetYear)} BC`;
+    if (step === '1 million years') return `${value} Million Years Ago`;
+    if (targetYear > 0) return `AD ${targetYear}`;
+    return `${Math.abs(targetYear - 1)} BC`;
 };

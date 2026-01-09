@@ -3,19 +3,28 @@ import type { HistoricalEvent, TimeStep } from '../types';
 import type { FocusTopic } from '../components/FocusSelector';
 
 // Mock data generator for demonstration
-const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: FocusTopic): HistoricalEvent[] => {
+const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: FocusTopic[]): HistoricalEvent[] => {
     const events: HistoricalEvent[] = [];
 
     // Very basic simulation of event density
     const count = Math.floor(Math.random() * 4) + 2; // 2 to 5 events
 
     for (let i = 0; i < count; i++) {
-        // Randomly assign topics if ALL
+        // Randomly assign topics if ALL (empty focus array)
         const topics: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region'];
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-        const eventTopic = focus === 'All' ? randomTopic : focus;
 
-        if (focus !== 'All' && focus !== eventTopic) continue;
+        // If focus is selected, try to match one of the selected topics
+        let eventTopic = randomTopic;
+        if (focus.length > 0) {
+            // 50% chance to force a relevant topic if filtered, otherwise random
+            if (Math.random() > 0.3) {
+                eventTopic = focus[Math.floor(Math.random() * focus.length)];
+            }
+        }
+
+        // Filter out if not in focus (and focus is not empty/All)
+        if (focus.length > 0 && !focus.includes(eventTopic)) continue;
 
         events.push({
             id: `evt-${Math.random().toString(36).substr(2, 9)}`,
@@ -29,7 +38,8 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
     }
 
     // Add some specific "Easter eggs"
-    if (focus === 'All' || focus === 'Space' || focus === 'Science') {
+    const isSpaceRelevant = focus.length === 0 || focus.includes('Space');
+    if (isSpaceRelevant) {
         if (targetYear >= 1960 && targetYear <= 1970) {
             events.push({
                 id: 'moon-landing',
@@ -43,11 +53,11 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
         }
     }
 
-    // Only return if matches focus (Easter egg logic above handles it roughly, but let's ensure)
-    return events.filter(e => focus === 'All' || e.category === focus).sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
+    // Double check filtering
+    return events.filter(e => focus.length === 0 || focus.includes(e.category as FocusTopic)).sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
 };
 
-export const fetchEvents = async (targetDate: Date, step: TimeStep, value: number, focus: FocusTopic = 'All'): Promise<HistoricalEvent[]> => {
+export const fetchEvents = async (targetDate: Date, step: TimeStep, value: number, focus: FocusTopic[] = []): Promise<HistoricalEvent[]> => {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
