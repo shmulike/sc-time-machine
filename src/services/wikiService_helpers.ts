@@ -5,7 +5,6 @@ export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | '
 
     // Determine era based on year
     const isPrehistoric = year !== undefined && year < -3500;
-    const isAncient = year !== undefined && year >= -3500 && year < 500;
 
     // Customize content based on era
     if (isPrehistoric) {
