@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import type { TimeStep } from '../types';
 
 export type Language = 'en' | 'he';
 
@@ -11,11 +12,13 @@ export type Translations = {
 
 const translations: Translations = {
     en: {
+        'app.branding': 'from shmulik Creations',
         'app.title': 'Time Machine',
         'app.subtitle': 'How Long Is ‘Long’?',
+        'app.footer': '© 2026 shmulik Creations. All rights reserved.',
         'step.label': 'Choose Time Step:',
         'slider.label': 'Go back in steps of',
-        'slider.value': 'Going back {value} steps',
+        'slider.value': 'Going back {value} {unit}',
         'target.label': 'Target Time:',
         'target.now': 'Now',
         'focus.label': 'Focus Area:',
@@ -31,13 +34,19 @@ const translations: Translations = {
         'modal.context': 'Historical Context',
         'modal.impact': 'Why it Matters',
         'modal.close': 'Close',
+        'more.events': 'Show More Events',
+        'tts.listen': '🔊 Listen',
+        'tts.stop': '⏸ Stop',
+        'voice.select': '🎤 Voice',
     },
     he: {
+        'app.branding': 'מבית היוצר של shmulik Creations',
         'app.title': 'מכונת הזמן',
         'app.subtitle': 'כמה זמן זה ״מזמן״?',
+        'app.footer': '© 2026 shmulik Creations. כל הזכויות שמורות.',
         'step.label': 'בחר קפיצת זמן:',
         'slider.label': 'חזור אחורה בקפיצות של',
-        'slider.value': 'חוזר {value} צעדים אחורה',
+        'slider.value': 'חוזר {value} {unit} אחורה',
         'target.label': 'זמן יעד:',
         'target.now': 'עכשיו',
         'focus.label': 'תחום עניין:',
@@ -53,6 +62,10 @@ const translations: Translations = {
         'modal.context': 'הקשר היסטורי',
         'modal.impact': 'למה זה חשוב',
         'modal.close': 'סגור',
+        'more.events': 'הצג אירועים נוספים',
+        'tts.listen': '🔊 האזן',
+        'tts.stop': '⏸ עצור',
+        'voice.select': '🎤 קול',
     }
 };
 
@@ -61,6 +74,7 @@ interface LanguageContextType {
     setLanguage: (lang: Language) => void;
     t: (key: string, params?: Record<string, string | number>) => string;
     isRTL: boolean;
+    getUnitName: (step: TimeStep, value: number) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -84,10 +98,32 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
         return text;
     };
 
+    const getUnitName = (step: TimeStep, value: number): string => {
+        const isEnglish = language === 'en';
+        const multiple = value !== 1;
+
+        switch (step) {
+            case '1 minute':
+                if (isEnglish) return multiple ? 'minutes' : 'minute';
+                return 'דקות';
+            case '1 year':
+            case '10 years':
+            case '100 years':
+            case '1000 years':
+                if (isEnglish) return multiple ? 'years' : 'year';
+                return 'שנים';
+            case '1 million years':
+                if (isEnglish) return multiple ? 'million years' : 'million year';
+                return 'מיליון שנה';
+            default:
+                return isEnglish ? 'steps' : 'צעדים';
+        }
+    };
+
     const isRTL = language === 'he';
 
     return (
-        <LanguageContext.Provider value={{ language, setLanguage, t, isRTL }}>
+        <LanguageContext.Provider value={{ language, setLanguage, t, isRTL, getUnitName }}>
             {children}
         </LanguageContext.Provider>
     );

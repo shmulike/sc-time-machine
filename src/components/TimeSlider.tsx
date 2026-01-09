@@ -1,28 +1,32 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
+import type { TimeStep } from '../types';
 
 interface TimeSliderProps {
     value: number;
     max: number;
     onChange: (val: number) => void;
     label: string;
+    selectedStep: TimeStep;
 }
 
-export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, label }) => {
-    const { t } = useLanguage();
+export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, label, selectedStep }) => {
+    const { t, getUnitName } = useLanguage();
+    const unit = getUnitName(selectedStep, value);
+
     return (
         <div className="slider-wrapper">
             <div className="slider-label">{label}</div>
             <div className="range-container">
                 <input
                     type="range"
-                    min="0"
+                    min="1"
                     max={max}
                     value={value}
                     onChange={(e) => onChange(Number(e.target.value))}
                     className="styled-slider"
                 />
-                <div className="slider-value-display">{t('slider.value', { value })}</div>
+                <div className="slider-value-display">{t('slider.value', { value, unit })}</div>
             </div>
 
             <style>{`

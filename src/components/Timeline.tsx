@@ -7,9 +7,12 @@ interface TimelineProps {
     events: HistoricalEvent[];
     loading: boolean;
     onEventClick: (event: HistoricalEvent) => void;
+    onLoadMore: () => void;
+    hasMore: boolean;
+    selectedVoice: string;
 }
 
-export const Timeline: React.FC<TimelineProps> = ({ events, loading, onEventClick }) => {
+export const Timeline: React.FC<TimelineProps> = ({ events, loading, onEventClick, onLoadMore, hasMore, selectedVoice }) => {
     const { t } = useLanguage();
 
     if (loading) {
@@ -63,9 +66,23 @@ export const Timeline: React.FC<TimelineProps> = ({ events, loading, onEventClic
 
     return (
         <div className="timeline-container">
-            {events.map((event) => (
-                <EventCard key={event.id} event={event} onClick={onEventClick} />
-            ))}
+            <div className="events-list">
+                {events.map((event) => (
+                    <EventCard key={event.id} event={event} onClick={onEventClick} selectedVoice={selectedVoice} />
+                ))}
+            </div>
+
+            {hasMore && (
+                <div className="load-more-container">
+                    <button
+                        className="load-more-btn"
+                        onClick={onLoadMore}
+                        disabled={loading}
+                    >
+                        {loading ? '...' : t('more.events')}
+                    </button>
+                </div>
+            )}
 
             <style>{`
         .timeline-container {
@@ -75,6 +92,37 @@ export const Timeline: React.FC<TimelineProps> = ({ events, loading, onEventClic
             padding: var(--spacing-lg) 0;
             max-width: 900px;
             margin: 0 auto;
+        }
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        .load-more-container {
+            display: flex;
+            justify-content: center;
+            margin-top: var(--spacing-lg);
+        }
+        .load-more-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-sm) var(--spacing-xl);
+            border-radius: 999px;
+            font-family: var(--font-display);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-md);
+        }
+        .load-more-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            background: var(--accent-color);
+        }
+        .load-more-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
       `}</style>
         </div>

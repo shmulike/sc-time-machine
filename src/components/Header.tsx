@@ -20,6 +20,7 @@ export const Header: React.FC = () => {
 
     return (
         <header className="header-container">
+            <div className="branding-text">{t('app.branding')}</div>
             <h1 className="main-title">{t('app.title')}</h1>
             <div className="sub-title">{t('app.subtitle')}</div>
             <div className="current-date">{currentDate}</div>
@@ -28,6 +29,16 @@ export const Header: React.FC = () => {
             .header-container {
                 text-align: center;
                 padding: var(--spacing-xl) 0;
+                padding-top: var(--spacing-xxl);
+            }
+            .branding-text {
+                font-family: var(--font-display);
+                font-size: 0.9rem;
+                text-transform: uppercase;
+                letter-spacing: 0.2em;
+                color: var(--secondary-color);
+                margin-bottom: var(--spacing-xs);
+                opacity: 0.8;
             }
             .main-title {
                 font-size: 3rem;

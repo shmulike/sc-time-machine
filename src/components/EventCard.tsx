@@ -1,14 +1,51 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { HistoricalEvent } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface EventCardProps {
     event: HistoricalEvent;
     onClick: (event: HistoricalEvent) => void;
+    selectedVoice: string;
 }
 
-export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
-    const { t } = useLanguage();
+export const EventCard: React.FC<EventCardProps> = ({ event, onClick, selectedVoice }) => {
+    const { t, language } = useLanguage();
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    const handleSpeak = (e: React.MouseEvent) => {
+        e.stopPropagation(); // Prevent card click event
+
+        // Always stop any ongoing speech first
+        window.speechSynthesis.cancel();
+
+        // If this card was speaking, just stop
+        if (isSpeaking) {
+            setIsSpeaking(false);
+            return;
+        }
+
+        // Create speech utterance
+        const utterance = new SpeechSynthesisUtterance();
+        utterance.text = `${event.title}. ${event.description}`;
+        utterance.lang = language === 'he' ? 'he-IL' : 'en-US';
+
+        // Use selected voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const voice = voices.find(v => v.name === selectedVoice);
+        if (voice) {
+            utterance.voice = voice;
+        }
+
+        utterance.rate = 1.0;
+        utterance.pitch = 1.0;
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
+    };
+
     return (
         <div className="event-card" onClick={() => onClick(event)}>
             {event.imageUrl && (
@@ -17,7 +54,17 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
                 </div>
             )}
             <div className="event-content">
-                <div className="event-year">{event.year}</div>
+                <div className="event-header">
+                    <div className="event-year">{event.year}</div>
+                    <button
+                        className="tts-button"
+                        onClick={handleSpeak}
+                        title={t(isSpeaking ? 'tts.stop' : 'tts.listen')}
+                        aria-label={t(isSpeaking ? 'tts.stop' : 'tts.listen')}
+                    >
+                        {isSpeaking ? '⏸' : '🔊'}
+                    </button>
+                </div>
                 <h3 className="event-title">{event.title}</h3>
                 <p className="event-description">{event.description}</p>
 
@@ -63,7 +110,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
         .event-image-wrapper {
             width: 100%;
             height: 200px;
-            background-color: var(--border-color); /* Placeholder color */
+            background-color: var(--border-color);
         }
         .event-image {
              width: 100%;
@@ -76,11 +123,32 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
             flex-direction: column;
             flex: 1;
         }
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xs);
+        }
         .event-year {
             font-size: 0.9rem;
             color: var(--secondary-color);
             font-weight: 600;
-            margin-bottom: var(--spacing-xs);
+        }
+        .tts-button {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .tts-button:hover {
+            background: var(--border-color);
+            transform: scale(1.1);
         }
         .event-title {
             font-size: 1.5rem;
@@ -93,7 +161,10 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick }) => {
             color: var(--text-color);
             line-height: 1.6;
             margin-bottom: var(--spacing-md);
-            overflow-y: auto;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
         }
         .read-more {
             align-self: flex-start;

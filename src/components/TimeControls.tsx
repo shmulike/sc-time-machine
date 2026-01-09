@@ -1,7 +1,7 @@
 import React from 'react';
 import type { TimeStep } from '../types';
 import { TimeSlider } from './TimeSlider';
-import { STEPS, getStepMax, calculateTargetTime } from '../utils/timeUtils';
+import { STEPS, calculateTargetTime } from '../utils/timeUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface TimeControlsProps {
@@ -20,7 +20,6 @@ export const TimeControls: React.FC<TimeControlsProps> = ({
     currentDate
 }) => {
     const { t, language } = useLanguage();
-    const maxSteps = getStepMax(selectedStep);
     const targetTimeLabel = calculateTargetTime(currentDate, selectedStep, sliderValue, language);
 
     return (
@@ -43,9 +42,10 @@ export const TimeControls: React.FC<TimeControlsProps> = ({
 
             <TimeSlider
                 value={sliderValue}
-                max={maxSteps}
+                max={100}
                 onChange={onSliderChange}
-                label={t('slider.label') + ' ' + selectedStep}
+                label={t('slider.label')}
+                selectedStep={selectedStep}
             />
 
             <div className="target-display">

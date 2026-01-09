@@ -1,14 +1,28 @@
 import React from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 
-export type FocusTopic = 'All' | 'Science' | 'War' | 'Art' | 'Space' | 'Region';
+export type FocusTopic = 'All' | 'Science' | 'War' | 'Art' | 'Space' | 'Region' | 'Technology' | 'Economy' | 'Religion' | 'Medicine' | 'Exploration';
 
 interface FocusSelectorProps {
     selectedFocus: FocusTopic[];
     onFocusChange: (focus: FocusTopic[]) => void;
 }
 
-const TOPICS: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region'];
+const TOPICS: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region', 'Technology', 'Economy', 'Religion', 'Medicine', 'Exploration'];
+
+const TOPIC_ICONS: Record<FocusTopic, string> = {
+    'All': '🌍',
+    'Science': '🔬',
+    'War': '⚔️',
+    'Art': '🎨',
+    'Space': '🚀',
+    'Region': '🏛️',
+    'Technology': '💻',
+    'Economy': '💰',
+    'Religion': '🕊️',
+    'Medicine': '⚕️',
+    'Exploration': '🧭'
+};
 
 export const FocusSelector: React.FC<FocusSelectorProps> = ({ selectedFocus, onFocusChange }) => {
     const { t } = useLanguage();
@@ -36,7 +50,7 @@ export const FocusSelector: React.FC<FocusSelectorProps> = ({ selectedFocus, onF
                     className={`focus-btn ${selectedFocus.length === 0 ? 'active' : ''}`}
                     onClick={handleClear}
                 >
-                    All
+                    {TOPIC_ICONS['All']} All
                 </button>
                 {TOPICS.map(topic => (
                     <button
@@ -44,7 +58,7 @@ export const FocusSelector: React.FC<FocusSelectorProps> = ({ selectedFocus, onF
                         className={`focus-btn ${selectedFocus.includes(topic) ? 'active' : ''}`}
                         onClick={() => handleTopicClick(topic)}
                     >
-                        {topic}
+                        {TOPIC_ICONS[topic]} {topic}
                     </button>
                 ))}
             </div>
