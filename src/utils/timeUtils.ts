@@ -54,11 +54,11 @@ export const calculateTargetTime = (start: Date, step: TimeStep, value: number, 
 
     if (lang === 'he') {
         if (step === '1 million years') return `לפני ${value} מיליון שנה`;
-        if (targetYear > 0) return `${targetYear} לספירה`;
+        if (targetYear > 0) return `${targetYear}`;
         return `${Math.abs(targetYear - 1)} לפני הספירה`;
     }
 
     if (step === '1 million years') return `${value} Million Years Ago`;
-    if (targetYear > 0) return `AD ${targetYear}`;
+    if (targetYear > 0) return `${targetYear}`;
     return `${Math.abs(targetYear - 1)} BC`;
 };

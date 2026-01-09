@@ -44,7 +44,6 @@ export const TimeControls: React.FC<TimeControlsProps> = ({
                 value={sliderValue}
                 max={100}
                 onChange={onSliderChange}
-                label={t('slider.label')}
                 selectedStep={selectedStep}
             />
 

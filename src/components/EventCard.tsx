@@ -12,6 +12,12 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, selectedVo
     const { t, language } = useLanguage();
     const [isSpeaking, setIsSpeaking] = useState(false);
 
+    const formatYear = (year: number) => {
+        if (typeof year !== 'number') return year;
+        if (year > 0) return `${year}`;
+        return `${Math.abs(year)} BC`;
+    };
+
     const handleSpeak = (e: React.MouseEvent) => {
         e.stopPropagation(); // Prevent card click event
 
@@ -55,7 +61,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, selectedVo
             )}
             <div className="event-content">
                 <div className="event-header">
-                    <div className="event-year">{event.year}</div>
+                    <div className="event-year">{formatYear(event.year as number)}</div>
                     <button
                         className="tts-button"
                         onClick={handleSpeak}
@@ -94,13 +100,19 @@ export const EventCard: React.FC<EventCardProps> = ({ event, onClick, selectedVo
         @media (min-width: 640px) {
             .event-card {
                 flex-direction: row;
-                height: 250px;
+                height: auto;
+                min-height: 250px;
+                align-items: stretch;
             }
             .event-image-wrapper {
                 flex: 0 0 300px;
-                height: 100%;
+                position: relative;
+                min-height: 250px;
             }
             .event-image {
+                position: absolute;
+                top: 0;
+                left: 0;
                 height: 100%;
                 width: 100%;
                 object-fit: cover;

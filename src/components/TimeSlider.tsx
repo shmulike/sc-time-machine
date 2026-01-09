@@ -6,18 +6,56 @@ interface TimeSliderProps {
     value: number;
     max: number;
     onChange: (val: number) => void;
-    label: string;
     selectedStep: TimeStep;
 }
 
-export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, label, selectedStep }) => {
+export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, selectedStep }) => {
     const { t, getUnitName } = useLanguage();
-    const unit = getUnitName(selectedStep, value);
+
+    // Calculate actual years based on step size
+    let actualYears = value;
+    if (selectedStep === '10 years') actualYears = value * 10;
+    else if (selectedStep === '100 years') actualYears = value * 100;
+    else if (selectedStep === '1000 years') actualYears = value * 1000;
+    else if (selectedStep === '1 million years') actualYears = value * 1000000;
+
+    const unit = getUnitName(selectedStep, actualYears);
+
+    // Calculate min and max years for the slider range
+    const currentYear = new Date().getFullYear();
+    let minYearsBack = 1;
+    let maxYearsBack = 100;
+
+    if (selectedStep === '10 years') {
+        minYearsBack = 10;
+        maxYearsBack = 1000;
+    } else if (selectedStep === '100 years') {
+        minYearsBack = 100;
+        maxYearsBack = 10000;
+    } else if (selectedStep === '1000 years') {
+        minYearsBack = 1000;
+        maxYearsBack = 100000;
+    } else if (selectedStep === '1 million years') {
+        minYearsBack = 1000000;
+        maxYearsBack = 100000000;
+    }
+
+    const minYear = currentYear - minYearsBack;
+    const maxYear = currentYear - maxYearsBack;
+
+    const formatYear = (year: number) => {
+        if (selectedStep === '1 million years') {
+            const millions = Math.abs(year) / 1000000;
+            return year > 0 ? `${millions.toFixed(0)}M` : `${millions.toFixed(0)}M BC`;
+        }
+        if (year > 0) return year.toString();
+        return `${Math.abs(year)} BC`;
+    };
 
     return (
         <div className="slider-wrapper">
-            <div className="slider-label">{label}</div>
             <div className="range-container">
+                <span className="range-min">{formatYear(minYear)}</span>
                 <input
                     type="range"
                     min="1"
@@ -26,8 +64,9 @@ export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, la
                     onChange={(e) => onChange(Number(e.target.value))}
                     className="styled-slider"
                 />
-                <div className="slider-value-display">{t('slider.value', { value, unit })}</div>
+                <span className="range-max">{formatYear(maxYear)}</span>
             </div>
+            <div className="slider-value-display">{t('slider.value', { value: actualYears, unit })}</div>
 
             <style>{`
         .slider-wrapper {
@@ -45,13 +84,14 @@ export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, la
         }
         .range-container {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            gap: var(--spacing-sm);
+            gap: var(--spacing-md);
+            width: 100%;
         }
         .styled-slider {
             -webkit-appearance: none;
-            width: 100%;
+            flex: 1;
             height: 8px;
             background: var(--border-color);
             border-radius: 5px;
@@ -74,9 +114,24 @@ export const TimeSlider: React.FC<TimeSliderProps> = ({ value, max, onChange, la
             background: var(--accent-color);
         }
         .slider-value-display {
+            text-align: center;
             font-family: var(--font-display);
             font-weight: bold;
             color: var(--primary-color);
+            margin-top: var(--spacing-sm);
+        }
+        .range-min, .range-max {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--text-color);
+            opacity: 0.7;
+            min-width: 70px;
+        }
+        .range-min {
+            text-align: right;
+        }
+        .range-max {
+            text-align: left;
         }
       `}</style>
         </div>

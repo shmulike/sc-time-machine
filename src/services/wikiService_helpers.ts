@@ -1,7 +1,41 @@
 import type { FocusTopic } from '../components/FocusSelector';
 
 // Helper to generate unique event content
-export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | 'he'): { title: string; description: string } => {
+export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | 'he', year?: number): { title: string; description: string } => {
+
+    // Determine era based on year
+    const isPrehistoric = year !== undefined && year < -3500;
+    const isAncient = year !== undefined && year >= -3500 && year < 500;
+
+    // Customize content based on era
+    if (isPrehistoric) {
+        // Simple, primitive events for very old times
+        const prehistoricTemplates = {
+            'Science': { en: ['Early Tool Usage', 'Fire Discovery', 'Natural Observation'], he: ['שימוש מוקדם בכלים', 'גילוי האש', 'תצפית בטבע'] },
+            'War': { en: ['Tribal Conflict', 'Territory Defense', 'Early Skirmish'], he: ['סכסוך שבטי', 'הגנה על טריטוריה', 'התכתשות מוקדמת'] },
+            'Technology': { en: ['Stone Tool Created', 'New Technique Learned', 'Shelter Improvement'], he: ['כלי אבן נוצר', 'טכניקה חדשה נלמדה', 'שיפור מחסה'] },
+            'Economy': { en: ['Resource Gathering', 'Early Barter', 'Hunt Success'], he: ['איסוף משאבים', 'סחר חליפין מוקדם', 'הצלחה בציד'] },
+            'Religion': { en: ['Ritual Practice', 'Nature Worship', 'Burial Rite'], he: ['פולחן טקסי', 'סגידה לטבע', 'טקס קבורה'] },
+            'Medicine': { en: ['Herbal Usage', 'Natural Remedy', 'Healing Ritual'], he: ['שימוש בצמחי מרפא', 'תרופה טבעית', 'טקס ריפוי'] },
+            'Exploration': { en: ['New Path Found', 'Migration', 'Cave Discovered'], he: ['נתיב חדש נמצא', 'נדידה', 'מערה התגלתה'] },
+            'Art': { en: ['Cave Painting', 'Rock Carving', 'Body Decoration'], he: ['ציור מערות', 'חריטה בסלע', 'קישוט גוף'] },
+            'Space': { en: ['Star Observation', 'Comet Sighting', 'Meteor Shower'], he: ['תצפית בכוכבים', 'מראה שביט', 'מטר מטאורים'] },
+            'Region': { en: ['Settlement Established', 'Migration Event', 'Tribal Gathering'], he: ['התיישבות הוקמה', 'אירוע נדידה', 'התכנסות שבטית'] },
+            'All': { en: ['Prehistoric Event'], he: ['אירוע פרהיסטורי'] }
+        };
+
+        const pt = prehistoricTemplates[topic] || prehistoricTemplates['All'];
+        const titleEn = pt.en[Math.floor(Math.random() * pt.en.length)];
+        const titleHe = pt.he[Math.floor(Math.random() * pt.he.length)];
+
+        return {
+            title: language === 'he' ? titleHe : titleEn,
+            description: language === 'he'
+                ? 'אירוע משמעותי בתקופה קדומה זו שעיצב את התפתחות האנושות המוקדמת.'
+                : 'A significant event in this early era that shaped early human development.'
+        };
+    }
+
     const templates: Record<FocusTopic, { titleEn: string[]; titleHe: string[]; descEn: string[]; descHe: string[] }> = {
         'Science': {
             titleEn: [

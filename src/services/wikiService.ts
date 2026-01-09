@@ -217,24 +217,27 @@ const findRealEvents = (targetYear: number, focus: FocusTopic[], lang: Language)
 };
 
 // Mock data generator for demonstration (fallback)
-const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: FocusTopic[], lang: Language): HistoricalEvent[] => {
+const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: FocusTopic[], lang: Language, minCount: number = 5): HistoricalEvent[] => {
     const events: HistoricalEvent[] = [];
 
     // First, try to find real events from our database
     const realEvents = findRealEvents(targetYear, focus, lang);
     events.push(...realEvents);
 
-    // If we have enough real events, return them early
-    if (realEvents.length >= 3) {
+    // If we have enough real events, return them early (but sort them first)
+    if (realEvents.length >= minCount) {
         return events.sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
     }
 
     // Otherwise, generate some generic events to fill the gaps
-    const count = Math.max(3 - realEvents.length, 2);
+    // Ensure we have at least minCount events total, plus a buffer
+    const needed = minCount - realEvents.length;
+    const count = needed + 2; // Add a small buffer
 
     for (let i = 0; i < count; i++) {
         // Randomly assign topics if ALL (empty focus array)
-        const topics: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region'];
+        // Ensure we include new topics in the random selection
+        const topics: FocusTopic[] = ['Science', 'War', 'Art', 'Space', 'Region', 'Technology', 'Economy', 'Religion', 'Medicine', 'Exploration'];
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
         // If focus is selected, try to match one of the selected topics
@@ -256,7 +259,7 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
         const specificLink = `${wikiSearchPrefix}${encodeURIComponent(topicDisplay)}`;
 
         // Generate unique event content
-        const uniqueEvent = generateUniqueEventContent(eventTopic, lang);
+        const uniqueEvent = generateUniqueEventContent(eventTopic, lang, targetYear - i);
 
         events.push({
             id: `evt-${Math.random().toString(36).substr(2, 9)}`,
@@ -270,7 +273,7 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
     }
 
     // Double check filtering and sort by year
-    return events.filter(e => focus.length === 0 || focus.includes(e.category as FocusTopic)).sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0)).slice(0, 50);
+    return events.filter(e => focus.length === 0 || focus.includes(e.category as FocusTopic)).sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
 };
 
 export const fetchEvents = async (targetDate: Date, step: TimeStep, value: number, focus: FocusTopic[] = [], lang: Language = 'en', count: number = 5): Promise<HistoricalEvent[]> => {
@@ -286,17 +289,9 @@ export const fetchEvents = async (targetDate: Date, step: TimeStep, value: numbe
     else if (step === '1 million years') targetYear -= value * 1000000;
     else if (step === '1 year') targetYear -= value;
 
-    // Generate a pool of events
-    const pool = generateMockEvents(targetYear, step, focus, lang);
+    // Generate a pool of events ensuring we have at least 'count' items
+    const pool = generateMockEvents(targetYear, step, focus, lang, count);
 
-    // Simulate more events by returning a slice or generating more if count > pool size
-    let results = [...pool];
-    if (results.length < count && results.length > 0) {
-        // Just duplicate for mock purposes if we need more than available
-        while (results.length < count) {
-            results = [...results, ...pool.map(e => ({ ...e, id: e.id + Math.random() }))];
-        }
-    }
-
-    return results.slice(0, count);
+    // Return only unique events, no duplication
+    return pool.slice(0, count);
 };
