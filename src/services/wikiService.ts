@@ -229,7 +229,6 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
         return events.sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
     }
 
-    const remainingNeeded = count - events.length;
     const usedTitles = new Set<string>();
 
     // Seed used titles with existing event titles

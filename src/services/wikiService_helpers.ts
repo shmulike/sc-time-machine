@@ -1,7 +1,7 @@
 import type { FocusTopic } from '../components/FocusSelector';
 
 // Helper to generate unique event content
-export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | 'he', year?: number): { title: string; description: string } => {
+export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | 'he', year?: number, excludeTitles: Set<string> = new Set()): { title: string; description: string } => {
 
     // Determine era based on year
     const isPrehistoric = year !== undefined && year < -3500;
