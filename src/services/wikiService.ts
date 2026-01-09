@@ -229,6 +229,12 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
         return events.sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
     }
 
+    const remainingNeeded = count - events.length;
+    const usedTitles = new Set<string>();
+
+    // Seed used titles with existing event titles
+    events.forEach(e => usedTitles.add(e.title));
+
     // Otherwise, generate some generic events to fill the gaps
     // Ensure we have at least minCount events total, plus a buffer
     const needed = minCount - realEvents.length;
@@ -259,7 +265,8 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
         const specificLink = `${wikiSearchPrefix}${encodeURIComponent(topicDisplay)}`;
 
         // Generate unique event content
-        const uniqueEvent = generateUniqueEventContent(eventTopic, lang, targetYear - i);
+        const uniqueEvent = generateUniqueEventContent(eventTopic, lang, targetYear - i, usedTitles);
+        usedTitles.add(uniqueEvent.title);
 
         events.push({
             id: `evt-${Math.random().toString(36).substr(2, 9)}`,
@@ -276,10 +283,68 @@ const generateMockEvents = (targetYear: number, _timeStep: TimeStep, focus: Focu
     return events.filter(e => focus.length === 0 || focus.includes(e.category as FocusTopic)).sort((a, b) => (typeof a.year === 'number' && typeof b.year === 'number' ? b.year - a.year : 0));
 };
 
-export const fetchEvents = async (targetDate: Date, step: TimeStep, value: number, focus: FocusTopic[] = [], lang: Language = 'en', count: number = 5): Promise<HistoricalEvent[]> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800));
+// Helper to strip HTML tags from snippet
+const stripHtml = (html: string) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
+};
 
+// Fetch real data from Wikipedia
+const fetchWikipediaEvents = async (year: number, focus: FocusTopic[], lang: Language, count: number): Promise<HistoricalEvent[]> => {
+    try {
+        const events: HistoricalEvent[] = [];
+        const baseUrl = lang === 'he' ? 'https://he.wikipedia.org/w/api.php' : 'https://en.wikipedia.org/w/api.php';
+
+        // Pick a relevant search term
+        let searchTerm = `${year}`;
+        if (focus.length > 0 && !focus.includes('All')) {
+            const topic = focus[0];
+            const topicTerm = lang === 'he' ? HEBREW_TOPICS[topic] : topic;
+            searchTerm += ` ${topicTerm}`;
+        } else {
+            // If "All", add a generic term sometimes to vary results, or just search the year
+            searchTerm += lang === 'he' ? ' היסטוריה' : ' history';
+        }
+
+        const params = new URLSearchParams({
+            action: 'query',
+            list: 'search',
+            srsearch: searchTerm,
+            format: 'json',
+            origin: '*',
+            srlimit: `${count + 2}` // Fetch a bit more than needed
+        });
+
+        const response = await fetch(`${baseUrl}?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.query && data.query.search) {
+            data.query.search.forEach((result: any) => {
+                // Filter out results that don't seem like events or are meta-pages
+                if (result.title.includes('User:') || result.title.includes('Talk:') || result.title.includes('Wikipedia:')) return;
+
+                events.push({
+                    id: `wiki-${result.pageid}`,
+                    year: year, // Best effort approximation
+                    title: result.title,
+                    description: stripHtml(result.snippet),
+                    imageUrl: `https://picsum.photos/seed/${result.pageid}/600/400`, // Fallback image for now
+                    sourceUrl: lang === 'he' ? `https://he.wikipedia.org/wiki/${encodeURIComponent(result.title)}` : `https://en.wikipedia.org/wiki/${encodeURIComponent(result.title)}`,
+                    category: focus.length > 0 ? focus[0] : 'Region' // Approximate category
+                });
+            });
+        }
+
+        return events;
+
+    } catch (error) {
+        console.warn("Wikipedia fetch failed, falling back to mock data", error);
+        return [];
+    }
+};
+
+export const fetchEvents = async (targetDate: Date, step: TimeStep, value: number, focus: FocusTopic[] = [], lang: Language = 'en', count: number = 5): Promise<HistoricalEvent[]> => {
     // Calculate approximate year
     let targetYear = targetDate.getFullYear();
 
@@ -289,9 +354,33 @@ export const fetchEvents = async (targetDate: Date, step: TimeStep, value: numbe
     else if (step === '1 million years') targetYear -= value * 1000000;
     else if (step === '1 year') targetYear -= value;
 
-    // Generate a pool of events ensuring we have at least 'count' items
-    const pool = generateMockEvents(targetYear, step, focus, lang, count);
+    const events: HistoricalEvent[] = [];
 
-    // Return only unique events, no duplication
-    return pool.slice(0, count);
+    // 1. Try manual real events first (High Quality)
+    const realEvents = findRealEvents(targetYear, focus, lang);
+    events.push(...realEvents);
+
+    // 2. If we need more, fetch from Wikipedia (Medium Quality, but High Variety)
+    if (events.length < count) {
+        // Only fetch from Wiki if year is within reasonable historical range (e.g., > -3500)
+        // For prehistoric, Wiki search might return odd results for simple year numbers
+        if (targetYear > -3500) {
+            const wikiCount = count - events.length;
+            const wikiEvents = await fetchWikipediaEvents(targetYear, focus, lang, wikiCount);
+            events.push(...wikiEvents);
+        }
+    }
+
+    // 3. If STILL need more, use generic fallback (Low Quality, but Guaranteed)
+    if (events.length < count) {
+        const remainingNeeded = count - events.length;
+        const mockPool = generateMockEvents(targetYear, step, focus, lang, remainingNeeded);
+
+        // Filter out any mocks that collide with existing real events (simple ID check)
+        const newMocks = mockPool.filter(m => !events.some(e => e.id === m.id));
+        events.push(...newMocks);
+    }
+
+    // Return only unique events, no duplication, slice to requested count
+    return events.slice(0, count);
 };

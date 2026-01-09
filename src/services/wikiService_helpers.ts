@@ -260,11 +260,22 @@ export const generateUniqueEventContent = (topic: FocusTopic, language: 'en' | '
     };
 
     const template = templates[topic];
-    const titleIndex = Math.floor(Math.random() * template.titleEn.length);
-    const descIndex = Math.floor(Math.random() * template.descEn.length);
+
+    let titleIndex = 0;
+    let descIndex = 0;
+    let attempts = 0;
+    let finalTitle = "";
+
+    do {
+        titleIndex = Math.floor(Math.random() * template.titleEn.length);
+        finalTitle = language === 'he' ? template.titleHe[titleIndex] : template.titleEn[titleIndex];
+        attempts++;
+    } while (excludeTitles.has(finalTitle) && attempts < 10);
+
+    descIndex = Math.floor(Math.random() * template.descEn.length);
 
     return {
-        title: language === 'he' ? template.titleHe[titleIndex] : template.titleEn[titleIndex],
+        title: finalTitle,
         description: language === 'he' ? template.descHe[descIndex] : template.descEn[descIndex]
     };
 };
